@@ -8,7 +8,7 @@ Một **[Ứng dụng Blogging)** được xây dựng với Java (Spring Boot),
 
 ## **Tính Năng**
 
-- Tạo, Chỉnh sửa và Xóa Bài viết Blog
+- Sử dụng Blogging app có 1 số tính năng đơn giản
 
 - RESTful API sử dụng Spring Boot (Java)
 
