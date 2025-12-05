@@ -4,7 +4,7 @@
 
 ## **Tổng Quan Dự Án**
 
-Một **[Ứng dụng Blogging Full-stack](./FullStack-Blogging-App/)** sẵn sàng cho production được xây dựng với Java (Spring Boot), Docker và Kubernetes — được tự động hóa hoàn toàn sử dụng các công cụ DevOps hiện đại. Ứng dụng này hỗ trợ đăng bài, chỉnh sửa và quản lý blog với tích hợp continuous delivery và bảo mật.
+Một **[Ứng dụng Blogging)** được xây dựng với Java (Spring Boot), Docker và Kubernetes — được tự động hóa hoàn toàn sử dụng các công cụ DevOps hiện đại. Ứng dụng này hỗ trợ đăng bài, chỉnh sửa và quản lý blog với tích hợp continuous delivery và bảo mật.
 
 ## **Tính Năng**
 
