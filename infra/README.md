@@ -15,7 +15,7 @@ Dự án này triển khai hạ tầng AWS bằng Terraform, bao gồm một c�
 
 - **EKS Cluster Security Group (`canhnq_cluster_sd`)**: Cho phép toàn bộ egress từ control plane của EKS
 - **EKS Node Security Group (`canhnq_node_sd`)**: Cho phép toàn bộ ingress/egress cho các worker node
-- **Security Group dịch vụ**: Mỗi EC2 dịch vụ (SonarQube, GitLab Runner, Monitor) có security group riêng (`*_sd`) cho phép toàn bộ ingress/egress (chỉ nên dùng cho demo, cần siết lại cho production)
+- **Security Group dịch vụ**: Mỗi EC2 dịch vụ (SonarQube, GitLab Runner) có security group riêng (`*_sd`) cho phép toàn bộ ingress/egress (chỉ nên dùng cho demo, cần siết lại cho production)
 
 ### Hạ tầng Kubernetes
 
@@ -24,11 +24,10 @@ Dự án này triển khai hạ tầng AWS bằng Terraform, bao gồm một c�
 
 ### Các EC2 dịch vụ bổ sung (Ubuntu 22.04 LTS)
 
-Dùng cho các công cụ DevOps/monitoring phổ biến:
+Dùng cho các công cụ DevOps phổ biến:
 
 - **SonarQube**: 1 EC2 `t2.medium`, Ubuntu 22.04 LTS
 - **GitLab Runner**: 1 EC2 `t2.medium`, Ubuntu 22.04 LTS (cài 2 runner: shell executor và kubernetes executor)
-- **Monitor (Prometheus & Grafana)**: 1 EC2 `t2.medium`, Ubuntu 22.04 LTS
 
 > **Lưu ý:** Chỉ 3 EC2 dịch vụ này dùng Ubuntu 22.04 LTS. NodeGroup của EKS dùng AMI tối ưu EKS mặc định.
 
@@ -152,7 +151,7 @@ Liên kết bảng định tuyến với cả hai mạng con, áp dụng quy t�
 
 - `canhnq_cluster_sd`: EKS control plane egress
 - `canhnq_node_sd`: EKS worker node ingress/egress
-- `sonarqube_sd`, `gitlab_runner_sd`, `monitor_sd`: EC2 dịch vụ (toàn bộ ingress/egress)
+- `sonarqube_sd`, `gitlab_runner_sd`: EC2 dịch vụ (toàn bộ ingress/egress)
 
 > Khi triển khai production, cần siết lại rule cho phù hợp.
 
@@ -186,8 +185,6 @@ resource "aws_instance" "sonarqube" {
   }
 }
 ```
-
-Jenkins, Monitor cấu hình tương tự, chỉ khác tên resource và security group.
 
 > NodeGroup của EKS dùng AMI tối ưu EKS mặc định, do AWS quản lý.
 
