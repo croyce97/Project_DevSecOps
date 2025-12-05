@@ -1,0 +1,82 @@
+## GitLab Runner Helm Chart Values
+## https://docs.gitlab.com/runner/install/kubernetes.html
+
+# GitLab URL (change to your GitLab instance)
+gitlabUrl: https://gitlab.com/
+
+# Runner registration token (get from GitLab → Settings → CI/CD → Runners)
+# Better to pass via --set or use a Kubernetes secret
+runnerToken: ""
+
+# Runner configuration
+runners:
+  # Runner name
+  name: "eks-runner"
+  
+  # Tags for this runner (used in .gitlab-ci.yml)
+  tags: "kubernetes,eks"
+  
+  # Run untagged jobs?
+  runUntagged: false
+  
+  # Protected branches only?
+  protected: false
+  
+  # Executor configuration
+  config: |
+    [[runners]]
+      [runners.kubernetes]
+        namespace = "gitlab-runner"
+        image = "ubuntu:22.04"
+        privileged = false
+        
+        # Resource limits for job pods
+        cpu_limit = "1"
+        memory_limit = "1Gi"
+        cpu_request = "500m"
+        memory_request = "512Mi"
+        
+        # Service account for job pods
+        service_account = "gitlab-runner"
+        
+        # Pull policy
+        pull_policy = ["if-not-present"]
+
+# RBAC - create service account and roles
+rbac:
+  create: true
+  
+  # Rules for the runner itself
+  rules:
+    - apiGroups: [""]
+      resources: ["pods", "pods/exec", "pods/attach", "pods/log", "secrets", "configmaps"]
+      verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+    - apiGroups: [""]
+      resources: ["services", "endpoints"]
+      verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+    - apiGroups: ["apps"]
+      resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
+      verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # Cluster-wide permissions (for deploying to other namespaces)
+  clusterWideAccess: true
+
+# Service account
+serviceAccount:
+  create: true
+  name: "gitlab-runner"
+
+# Runner pod resources
+resources:
+  limits:
+    memory: 256Mi
+    cpu: 500m
+  requests:
+    memory: 128Mi
+    cpu: 100m
+
+# Concurrent jobs
+concurrent: 4
+
+# Check interval for new jobs (seconds)
+checkInterval: 10

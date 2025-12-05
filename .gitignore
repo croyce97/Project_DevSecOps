@@ -1,0 +1,21 @@
+.DS_Store
+
+# Maven
+blogging-app/target/
+blogging-app/.mvn/
+blogging-app/.idea/
+blogging-app/.classpath
+blogging-app/.project
+blogging-app/.settings/
+
+# Terraform
+infra/terraform/.terraform/
+infra/terraform/.terraform.lock.hcl
+infra/terraform/terraform.tfstate
+infra/terraform/terraform.tfstate.*
+infra/terraform/crash.log
+infra/terraform/*.tfvars
+infra/terraform/*.tfvars.json
+
+# Logs
+*.log

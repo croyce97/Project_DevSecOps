@@ -1,0 +1,151 @@
+stages:
+  - compile
+  - test
+  - security-scan
+  - code-quality
+  - build
+  - publish
+  - deploy
+  - verify
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  IMAGE_NAME: "blogging-app"
+  IMAGE_TAG: "$CI_COMMIT_SHORT_SHA"
+
+cache:
+  paths:
+    - .m2/repository/
+    - target/
+
+# ===================
+# COMPILE STAGE
+# ===================
+compile:
+  stage: compile
+  tags:
+    - shell # Use your EC2 runner (change to your runner's tag)
+  script:
+    - mvn compile -DskipTests
+  artifacts:
+    paths:
+      - target/
+    expire_in: 1 hour
+
+# ===================
+# TEST STAGE
+# ===================
+test:
+  stage: test
+  tags:
+    - shell
+  script:
+    - mvn test
+  artifacts:
+    paths:
+      - target/surefire-reports/
+      - target/site/jacoco/
+    reports:
+      junit: target/surefire-reports/TEST-*.xml
+    expire_in: 1 week
+
+# ===================
+# SECURITY SCAN STAGE
+# ===================
+trivy-fs-scan:
+  stage: security-scan
+  tags:
+    - shell
+  script:
+    - trivy fs --severity HIGH,CRITICAL --exit-code 0 --format table .
+  allow_failure: true
+
+# ===================
+# CODE QUALITY STAGE
+# ===================
+sonarqube-check:
+  stage: code-quality
+  tags:
+    - shell
+  script:
+    - mvn sonar:sonar
+      -Dsonar.projectKey=blogging-app
+      -Dsonar.projectName="Blogging App"
+      -Dsonar.host.url=$SONAR_HOST_URL
+      -Dsonar.token=$SONAR_TOKEN
+      -Dsonar.qualitygate.wait=true
+  allow_failure: true
+
+# ===================
+# BUILD STAGE
+# ===================
+build:
+  stage: build
+  tags:
+    - shell
+  script:
+    - mvn package -DskipTests
+  artifacts:
+    paths:
+      - target/*.jar
+    expire_in: 1 week
+
+# ===================
+# PUBLISH STAGE
+# ===================
+publish-docker:
+  stage: publish
+  tags:
+    - shell
+  script:
+    - docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_TOKEN"
+    - docker build -t $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG .
+    - docker push $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG
+  after_script:
+    - docker logout || true
+  only:
+    - main
+    - master
+
+# ===================
+# DEPLOY STAGE
+# ===================
+deploy-to-eks:
+  stage: deploy
+  tags:
+    - kubernetes # EKS runner with kubernetes executor
+    - eks
+  image: bitnami/kubectl:latest
+  script:
+    - echo "Deploying to EKS cluster..."
+    - kubectl create namespace app --dry-run=client -o yaml | kubectl apply -f -
+    - |
+      kubectl create secret docker-registry dockerhub-secret \
+        --docker-server=https://index.docker.io/v1/ \
+        --docker-username=$DOCKERHUB_USERNAME \
+        --docker-password=$DOCKERHUB_TOKEN \
+        -n app --dry-run=client -o yaml | kubectl apply -f -
+    - sed -i "s|\${DOCKERHUB_USERNAME}|$DOCKERHUB_USERNAME|g" k8s/deployment.yaml
+    - sed -i "s|\${IMAGE_TAG}|$IMAGE_TAG|g" k8s/deployment.yaml
+    - kubectl apply -f k8s/deployment.yaml -n app
+  only:
+    - main
+    - master
+
+# ===================
+# VERIFY STAGE
+# ===================
+verify-deployment:
+  stage: verify
+  tags:
+    - kubernetes # EKS runner with kubernetes executor
+    - eks
+  image: bitnami/kubectl:latest
+  script:
+    - echo "Verifying deployment..."
+    - kubectl rollout status deployment/blogging-app -n app --timeout=300s
+    - kubectl get pods -n app -l app=blogging-app
+    - kubectl get svc -n app -l app=blogging-app
+  only:
+    - main
+    - master
