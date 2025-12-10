@@ -1,4 +1,4 @@
-# Dự Án DevOps: Triển Khai End-to-End Ứng Dụng FullStack Blogging
+# Dự Án DevOps: Triển Khai End-to-End Ứng Dụng Blogging
 
 ### (Ứng dụng Spring Boot được triển khai trên AWS với EKS, Terraform, GitLab CI, SonarQube, Trivy & Rancher)
 
